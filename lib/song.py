@@ -1,35 +1,35 @@
-from config import CONN, CURSOR
+import sqlite3
 
 class Song:
     def __init__(self, name, album):
-        self.id = None
+        self.id=None
         self.name=name
         self.album=album
 
-    @classmethod
-    def create_table(self):
-        sql = """
+    @staticmethod
+    def create_table():
+        with sqlite3.connect("music.db") as connection:
+            cursor=connection.cursor()
+            cursor.execute('''
             CREATE TABLE IF NOT EXISTS songs (
-                id INTEGER PRIMARY KEY,
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
                 name TEXT,
                 album TEXT
             )
-        """
-
-        CURSOR.execute(sql)
-
+        ''')
+            
     def save(self):
-        sql = """
+        with sqlite3.connect("music.db") as connection:
+            cursor=connection.cursor()
+
+            cursor.execute('''
             INSERT INTO songs (name, album)
             VALUES (?, ?)
-        """
-
-        CURSOR.execute(sql, (self.name, self.album))
-
-        self.id = CURSOR.execute("SELECT last_insert_rowid() FROM songs").fetchone()[0]
+            ''', (self.name, self.album))
+            self.id = cursor.lastrowid
 
     @classmethod
     def create(cls, name, album):
-        song = Song(name, album)
+        song=cls(name, album)
         song.save()
         return song
